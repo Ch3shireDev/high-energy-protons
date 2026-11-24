@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spike: Pythia 8 w WASM – na żywo czy cache?</title>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="spike.mjs"></script>
+</head>
+<body>
+<header>
+  <p class="kicker">HIGH ENERGY PROTONS · etap 4 · spike</p>
+  <h1>Pythia 8 w przeglądarce: na żywo czy cache?</h1>
+  <p class="lede">
+    Ta strona ładuje Pythię 8 skompilowaną do WebAssembly, uruchamia ją w Web Workerach
+    (bez pthreads, jak na GitHub Pages) i mierzy to, od czego zależy decyzja: rozmiar paczki,
+    czas inicjalizacji, koszt jednego zdarzenia pp przy √s = 13.6 TeV i skalowanie puli workerów.
+    Na końcu każdy scenariusz dostaje werdykt według jawnych progów.
+  </p>
+  <dl id="env" class="env"></dl>
+</header>
+
+<main>
+  <section class="panel" id="controls">
+    <h2>Ustawienia pomiaru</h2>
+    <form id="form">
+      <fieldset>
+        <legend>Scenariusze</legend>
+        <div id="scenarios"></div>
+      </fieldset>
+      <div class="row">
+        <label>Czas pomiaru na krok [s]
+          <input type="number" id="duration" min="1" max="60" step="1" value="3">
+        </label>
+        <label>Maks. workerów w puli
+          <input type="number" id="maxWorkers" min="1" max="64" step="1">
+        </label>
+        <label>Seed
+          <input type="number" id="seed" min="0" max="900000000" step="1" value="12345">
+        </label>
+      </div>
+      <button type="submit" id="run">Uruchom pomiar</button>
+      <span id="status" class="status" role="status"></span>
+    </form>
+  </section>
+
+  <section class="panel" id="summary" hidden>
+    <h2>Podsumowanie</h2>
+    <div id="summaryBody"></div>
+    <div class="row">
+      <button type="button" id="copyMd">Kopiuj jako Markdown (do SPIKE.md)</button>
+      <button type="button" id="saveJson">Zapisz surowe wyniki (JSON)</button>
+    </div>
+  </section>
+
+  <section class="panel" id="package" hidden>
+    <h2>Paczka i start modułu</h2>
+    <div id="packageBody"></div>
+  </section>
+
+  <div id="results"></div>
+
+  <section class="panel">
+    <h2>Dziennik</h2>
+    <pre id="log" class="log"></pre>
+  </section>
+
+  <section class="panel notes">
+    <h2>Co tu jest mierzone</h2>
+    <ul>
+      <li><b>Init</b> – <code>Pythia::init()</code> dla danego scenariusza (tablicowanie MPI, przekrojów). Płaci go każdy worker osobno.</li>
+      <li><b>ms/zdarzenie</b> – czas <code>pythia.next()</code> plus upakowanie rekordu do <code>Float64Array</code>, mierzony w workerze po 5 zdarzeniach rozgrzewki.</li>
+      <li><b>Pula</b> – k workerów generuje równocześnie; przepustowość = suma zdarzeń / czas ściany.</li>
+      <li><b>Rozmiar zdarzenia</b> – pełny rekord (16 × float64 na wpis) i format kompaktowy do cache'u (tylko stan końcowy, 32 B/cząstkę), oba też po gzip.</li>
+      <li><b>Determinizm</b> – (1) pierwsze zdarzenie po <code>init(seed)</code> identyczne we wszystkich workerach, (2) <code>nextWithSeed(s)</code> daje to samo zdarzenie przed i po innych zdarzeniach – warunek linków „seed + ustawienia”.</li>
+      <li>Rozpady: <code>ParticleDecays:limitTau0 = on</code>, cτ<sub>max</sub> = 10 mm – długo żyjące (K⁰<sub>S</sub>, Λ, π±) zostają dla własnego silnika helis i rozpadów.</li>
+    </ul>
+  </section>
+</main>
+<footer>
+  Pythia 8 © Pythia Collaboration, GPL v2+. Projekt: GPL-3.0-or-later.
+  <span id="buildInfo"></span>
+</footer>
+</body>
+</html>

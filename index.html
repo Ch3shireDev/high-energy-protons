@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HIGH ENERGY PROTONS – symulator zderzeń</title>
+<meta name="description" content="Symulator zderzeń wysokoenergetycznych w przeglądarce. Fizyka liczona uczciwie, psychodelia tylko w shaderach.">
+<link rel="stylesheet" href="./src/ui/style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<header id="top">
+  <div class="brand">HIGH ENERGY PROTONS</div>
+  <nav class="modes" role="tablist">
+    <button role="tab" data-mode="ee" class="on">e⁺e⁻</button>
+    <button role="tab" data-mode="pp">pp · Pythia 8</button>
+  </nav>
+  <div class="spacer"></div>
+  <label class="toggle keep" title="Jasność śladów i poświaty (tylko prezentacja)">jasność <input type="range" id="brightness" min="0.05" max="2" step="0.05" value="0.5"></label>
+  <label class="toggle" title="Wyłącza efekty, zostawia czyste dane"><input type="checkbox" id="science"> Science mode</label>
+  <label class="file" title="Plik audio – analiza lokalnie, nic nie jest wysyłane"><input type="file" id="audioFile" accept="audio/*"> <span id="audioLabel">♪ muzyka</span></label>
+  <label class="toggle"><input type="checkbox" id="sonify"> sonifikacja</label>
+  <button id="share" title="Link: ustawienia + seed + numer zdarzenia">🔗 link</button>
+</header>
+
+<aside id="left" class="panel"></aside>
+<aside id="right" class="panel"></aside>
+
+<section id="hud"></section>
+
+<footer id="timeline">
+  <button id="play" title="Odtwórz zdarzenie w czasie (skala log)">▶</button>
+  <div class="axis">
+    <input type="range" id="time" min="0" max="1000" value="1000" step="1" aria-label="Czas: przed zderzeniem liniowo, po zderzeniu w skali log">
+    <div id="ticks"></div>
+    <div class="scale"><div class="pre"><span>−3 ns</span><span>zderzenie</span></div><div class="log"><span>10⁻²⁷ s</span><span>10⁻²⁴</span><span>10⁻²¹</span><span>10⁻¹⁸</span><span>10⁻¹⁵</span><span>10⁻¹²</span><span>10⁻⁹ s</span></div></div>
+  </div>
+  <div id="tLabel" class="tlabel"></div>
+  <div class="evnav">
+    <button id="prev" title="Poprzednie zdarzenie">◀</button>
+    <span id="evIndex">#0</span>
+    <button id="next" title="Następne zdarzenie">▶▶</button>
+    <button id="reroll" title="Wylosuj rozpady jeszcze raz (ten sam proces twardy)">⟲ re-roll</button>
+  </div>
+</footer>
+
+<div id="toast" role="status"></div>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

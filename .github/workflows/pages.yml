@@ -1,0 +1,62 @@
+name: Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build WASM jest drogi – cache po wersji Pythii/emsdk i hashu wrappera + skryptów.
+      - name: Cache WASM
+        id: wasm-cache
+        uses: actions/cache@v4
+        with:
+          path: wasm/dist
+          key: pythia-wasm-${{ hashFiles('wasm/pythia-version.env', 'wasm/Dockerfile', 'wasm/build.sh', 'wasm/build-inner.sh', 'wasm/wrapper.cpp') }}
+
+      - name: Build Pythia → WASM (Docker)
+        if: steps.wasm-cache.outputs.cache-hit != 'true'
+        run: ./wasm/build.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Bramka jakości: testy fizyki muszą przechodzić przed publikacją.
+      - run: npm test
+
+      # prebuild kopiuje wasm/dist → public/pythia i wasm/spike → public/spike.
+      - run: npm run build
+
+      - run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
